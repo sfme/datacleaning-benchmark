@@ -26,7 +26,8 @@ class MissingSystematicNoiseModel(NoiseModel.NoiseModel):
 
     super(MissingSystematicNoiseModel, self).__init__(shape, 
     	                             probability, 
-    	                             feature_importance)
+    	                             feature_importance,
+                                   True)
     self.k = k
     self.p = p
   
@@ -41,7 +42,7 @@ class MissingSystematicNoiseModel(NoiseModel.NoiseModel):
     for i in numpy.argsort(X[:,hvfeature]):
       if numpy.random.rand(1,1) < self.p:
         a = numpy.random.choice(self.feature_importance[0:self.k],1)
-        Y[i,a] = means[a]
+        Y[i,a] = means[a] # TODO SAM: wrong?
 
     return Y
 
@@ -62,8 +63,9 @@ class ERNoiseModel(NoiseModel.NoiseModel):
                z = 3):
 
     super(ERNoiseModel, self).__init__(shape, 
-    	                             probability, 
-    	                             feature_importance)
+    	                                 probability, 
+    	                                 feature_importance,
+                                       False)
     self.ks = ks
     self.z = z
 

@@ -6,6 +6,7 @@ outputs another numpy matrix with the same shape.
 import numpy as np
 import random
 import copy
+import pandas as pd
 
 class NoiseModel(object):
 
@@ -23,10 +24,12 @@ class NoiseModel(object):
   def __init__(self,
                shape=(1,1), 
                probability=0,
-               feature_importance=[]):
+               feature_importance=[],
+               one_cell_flag=False):
     
     self.shape = shape
     self.probability = probability
+    self.one_cell_flag = one_cell_flag
 
     if feature_importance == []:
       self.feature_importance = range(0,shape[1])
@@ -54,8 +57,10 @@ class NoiseModel(object):
   The apply function applies the noise model to some 
   subset of the data and performs the necessary error
   checks to make sure sizes are preserved.
+
+  Accepts Numpy and Pandas DataFrame.
   """
-  def apply(self, X):
+  def apply(self, X, int_cast=False):
     xshape = np.shape(X)
 
     if xshape != self.shape:
@@ -69,8 +74,24 @@ class NoiseModel(object):
     tocorrupt = all_indices[0:Ns]
     self.argselect = tocorrupt
     clean = all_indices[Ns:]
+
+    # enforce previous order of tuples
+    if not isinstance(X, pd.DataFrame):
+      # Numpy ndarray implementation
+      corrupt_data = np.empty(X.shape, dtype=object)
+      corrupt_data[tocorrupt,:] = self.corrupt(X[tocorrupt,:])
+      corrupt_data[clean,:] = X[clean,:]
+    else:
+      # Pandas DataFrame implementation
+      corrupt_data = pd.DataFrame(index=X.index, columns=X.columns)
+      corrupt_data.iloc[tocorrupt,:] = self.corrupt(X.iloc[tocorrupt,:])
+      corrupt_data.iloc[clean,:] = X.iloc[clean,:]
+
+    # convert output to integer cast
+    if int_cast and not isinstance(X, pd.DataFrame):
+      corrupt_data = corrupt_data.astype(np.int)
     
-    return (np.vstack((self.corrupt(X[tocorrupt,:]), X[clean,:])), np.vstack((X[tocorrupt,:], X[clean,:])))
+    return corrupt_data, X
 
   """
   This method should be implemented by sub-classes
