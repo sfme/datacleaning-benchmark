@@ -25,7 +25,7 @@ from collections import namedtuple
 name_file = "adult"
 
 # Data Path to Adult Datasets
-DATADIR_PATH = "/afs/inf.ed.ac.uk/user/s15/s1569253/CFD_Project/Project_Code/CFD_Inference/Datasets/adult_2.0/data"
+DATADIR_PATH = "your dataset directory here containing the adult.csv file"
 
 # Load Clean Version of Adult Dataset from UCI ML Repository (.CSV file)
 df_data = pd.read_csv(DATADIR_PATH + "/adult.csv")
