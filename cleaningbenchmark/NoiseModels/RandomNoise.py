@@ -7,6 +7,7 @@ import numpy
 import NoiseModel
 import pandas
 
+
 """
 This model implements Gaussian Noise
 """
@@ -170,8 +171,6 @@ class ZipfNoiseModel(NoiseModel.NoiseModel):
   
   """
   z is the Zipfian Scale Parameter
-
-  TODO: Insert generation of negative values as well?
   """
   def __init__(self, 
                shape, 
@@ -269,7 +268,7 @@ class CategoricalNoiseModel(NoiseModel.NoiseModel):
   category names and probabilities match
   """
   
-  def __init__(self, 
+  def __init__(self,
                shape,
                cats_name_lists,
                probability=0,
@@ -301,7 +300,7 @@ class CategoricalNoiseModel(NoiseModel.NoiseModel):
     """
     X must be ndarray (numpy) with dtype object
 
-    NOTE: For all Uniform (Categories + Typos) do: 
+    NOTE: To obtain Uniform distribution across all choices (Categories + Typos) do: 
           -> cats_probs_list=[]
           -> typo_prob=1/(N_categories + 1)
     """
@@ -314,13 +313,14 @@ class CategoricalNoiseModel(NoiseModel.NoiseModel):
 
       a = numpy.random.choice(ps)
 
-      tmp_cat_name_list = self.cats_name_lists[a] + ["*" + str(Y[i,a]) + "*"]
+      tmp_cat_name_list = self.cats_name_lists[a] + [NoiseModel.generate_typo(str(Y[i,a]))]
       tmp_cat_prob_list = self.cats_probs_list[a]
 
       idx_rmv = -1
       for idx, elem in enumerate(tmp_cat_name_list):
         if elem == Y[i,a]:
           idx_rmv = idx
+          break
 
       if idx_rmv >= 0:
         tmp_cat_name_list.pop(idx_rmv)
@@ -337,13 +337,14 @@ class CategoricalNoiseModel(NoiseModel.NoiseModel):
 
       idx_cat = idx_cat_map[idx_1]
 
-      tmp_cat_name_list = self.cats_name_lists[idx_cat] + ["*" + str(Y[idx_0,idx_1]) + "*"]
+      tmp_cat_name_list = self.cats_name_lists[idx_cat] + [NoiseModel.generate_typo(str(Y[idx_0,idx_1]))]
       tmp_cat_prob_list = self.cats_probs_list[idx_cat]
 
       idx_rmv = -1
       for idx, elem in enumerate(tmp_cat_name_list):
         if elem == Y[idx_0,idx_1]:
           idx_rmv = idx
+          break
 
       if idx_rmv >= 0:
         tmp_cat_name_list.pop(idx_rmv)
@@ -375,11 +376,11 @@ class MixedNoiseTupleWiseModel(NoiseModel.NoiseModel):
                                                    feature_importance,
                                                    one_cell_flag)
     
-    self.model_cat = model_categorical
+    self.model_cat = model_categorical 
     self.model_num = model_numerical
 
-    self.idx_map_cat = idx_map_cat
-    self.idx_map_num = idx_map_num
+    self.idx_map_cat = idx_map_cat # TODO: check if this is good input, should the overall processing be placed inside ?!!
+    self.idx_map_num = idx_map_num # TODO: check if this is good input, should the overall processing be placed inside ?!! 
 
     self.cat_array_bool = cat_array_bool
     self.p_row = p_row
@@ -394,7 +395,7 @@ class MixedNoiseTupleWiseModel(NoiseModel.NoiseModel):
     Y = numpy.copy(X)
 
     # generate idxs to be used in noising (from the selected dataset)
-    idx_mat = numpy.random.uniform(0.0, 1.0, X.shape) <= self.p_row
+    idx_mat = numpy.random.uniform(0.0, 1.0, X.shape) <= self.p_row 
 
     # get categorical indexes for dirty cells
     idxs_cat = numpy.where(idx_mat & self.cat_array_bool)

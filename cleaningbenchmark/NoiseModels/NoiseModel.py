@@ -7,6 +7,41 @@ import numpy as np
 import random
 import copy
 import pandas as pd
+import string
+
+chars = np.array(list(string.letters + string.digits)) # + string.punctuation
+
+def generate_typo(current_string):
+
+  """
+  function generates simple typos for categorical noise models
+  """
+
+  string_arr = np.array(list(current_string))
+
+  # choose how many characters to dirty
+  dt_chars_numb = np.random.randint(1, len(string_arr)+1)
+
+  # choose which characters to dirty
+  dt_chars_idxs = np.random.choice(len(string_arr), dt_chars_numb, False)
+
+  # get random characters
+  dt_chars_selected = np.random.choice(chars, dt_chars_numb)
+
+  # insert new characters into string
+  string_arr[dt_chars_idxs] = dt_chars_selected
+
+  # convert to string
+  ret_string = string_arr.tostring()
+
+  # random string to append, of size 3
+  string_append = ''.join(np.random.choice(chars, 3))
+
+  # final string to return
+  ret_string = ''.join([ret_string, string_append])
+
+  return ret_string
+
 
 class NoiseModel(object):
 
@@ -87,7 +122,7 @@ class NoiseModel(object):
       corrupt_data.iloc[tocorrupt,:] = self.corrupt(X.iloc[tocorrupt,:])
       corrupt_data.iloc[clean,:] = X.iloc[clean,:]
 
-    # convert output to integer cast
+    # convert block output (all features) to integer cast
     if int_cast and not isinstance(X, pd.DataFrame):
       corrupt_data = corrupt_data.astype(np.int)
     

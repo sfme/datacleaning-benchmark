@@ -120,6 +120,11 @@ class cCFDNoiseModel(NoiseModel.NoiseModel):
     self.categories_dict = categories_dict
 
   def apply(self, X):
+
+    """
+    Must receive pandas DataFrame X, with proper definition of
+    column data types.
+    """
     
     return self.corrupt(X), X
 
@@ -132,8 +137,6 @@ class cCFDNoiseModel(NoiseModel.NoiseModel):
 
     # create new corrupted data
     Y = X.copy()
-    # cast category to object
-    Y[self.categories_dict.keys()] = Y[self.categories_dict.keys()].apply(lambda x: x.astype('object'))
 
     # get means and standard deviations
     # (will be used as noise for the numericas, does not distort statistics)
@@ -182,7 +185,7 @@ class cCFDNoiseModel(NoiseModel.NoiseModel):
           # Add Typo if none of above 
           else: 
             # noise the cell using standard typo (e.g. unique/rare)
-            Y.set_value(row_idx, ccfd.RHS[0], "*"+ccfd.RHS[1]+"*")
+            Y.set_value(row_idx, ccfd.RHS[0], NoiseModel.generate_typo(ccfd.RHS[1]))
 
     #Testing
     #for ccfd in self.ccfds:
@@ -194,6 +197,9 @@ class cCFDNoiseModel(NoiseModel.NoiseModel):
 
     # drop auxiliary index
     X.drop('indexcol', axis=1, inplace=True)
+
+    # cast category to object (since adding noise, may change the definition of categories available to feature)
+    Y[self.categories_dict.keys()] = Y[self.categories_dict.keys()].apply(lambda x: x.astype('object'))
 
     return Y
 
