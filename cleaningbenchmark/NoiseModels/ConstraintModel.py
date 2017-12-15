@@ -108,7 +108,8 @@ class cCFDNoiseModel(NoiseModel.NoiseModel):
                probability=0,
                feature_importance=[],
                ccfds=[],
-               p_row=0.01):
+               p_row=0.01,
+               alpha_prob=1.0):
 
     super(cCFDNoiseModel, self).__init__(shape, 
                                          probability, 
@@ -118,6 +119,7 @@ class cCFDNoiseModel(NoiseModel.NoiseModel):
     self.p = p_row # probability of row being used
     self.ccfds = ccfds # list of constant CFDs to be broken
     self.categories_dict = categories_dict
+    self.alpha_prob = alpha_prob
 
   def apply(self, X):
 
@@ -159,7 +161,7 @@ class cCFDNoiseModel(NoiseModel.NoiseModel):
       if X[ccfd.RHS[0]].dtype.name == 'category':
         cats = [t for t in self.categories_dict[ccfd.RHS[0]] if t != ccfd.RHS[1]]
         cats_probs = X[ccfd.RHS[0]].value_counts()[cats].values
-        cats_probs = cats_probs / float(cats_probs.sum())
+        cats_probs = cats_probs**self.alpha_prob / float(cats_probs.sum()**self.alpha_prob)
 
       ## Insert Right Hand Side Noise (to violate the constraint)
       for row_idx in df_res['indexcol']:

@@ -274,9 +274,10 @@ class CategoricalNoiseModel(NoiseModel.NoiseModel):
                probability=0,
                feature_importance=[],
                cats_probs_list=[], 
-               typo_prob=0.01):
+               typo_prob=0.01,
+               alpha_prob=1.0):
 
-    super(CategoricalNoiseModel, self).__init__(shape, 
+    super(CategoricalNoiseModel, self).__init__(shape,
                                                 probability, 
                                                 feature_importance,
                                                 True)
@@ -284,12 +285,16 @@ class CategoricalNoiseModel(NoiseModel.NoiseModel):
     self.cats_name_lists = cats_name_lists
     self.cats_probs_list = cats_probs_list
     self.typo_prob = typo_prob
+    self.alpha_prob = alpha_prob
 
     if not self.cats_probs_list:
       # if cats_probs_list not provided assume that each feature/column has 
       #   uniform distribution on its categories
       self.cats_probs_list = [numpy.ones(len(self.cats_name_lists[i])) / float(len(self.cats_name_lists[i])) 
                               for i in xrange(len(self.cats_name_lists))]
+
+    self.cats_probs_list = [self.cats_probs_list[i]**alpha_prob / numpy.sum(self.cats_probs_list[i]**alpha_prob)
+                            for i in xrange(len(self.cats_name_lists))]
 
     # renormalize categorical probabilities for each feature
     #   as to include typo probability
@@ -376,7 +381,7 @@ class MixedNoiseTupleWiseModel(NoiseModel.NoiseModel):
                                                    feature_importance,
                                                    one_cell_flag)
     
-    self.model_cat = model_categorical 
+    self.model_cat = model_categorical
     self.model_num = model_numerical
 
     self.idx_map_cat = idx_map_cat # TODO: check if this is good input, should the overall processing be placed inside ?!!
