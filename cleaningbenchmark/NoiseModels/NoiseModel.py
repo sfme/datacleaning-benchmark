@@ -11,7 +11,7 @@ import string
 
 chars = np.array(list(string.letters + string.digits)) # + string.punctuation
 
-def generate_typo(current_string):
+def generate_typo_old(current_string):
 
   """
   function generates simple typos for categorical noise models
@@ -41,6 +41,60 @@ def generate_typo(current_string):
   ret_string = ''.join([ret_string, string_append])
 
   return ret_string
+
+
+def generate_typo(cur_str):
+
+  """
+  Generates simple typos for categorical noise models
+
+    -> Assumes Damerau-Levenshtein edit distance
+       with all errors being within edit distance 2.
+       It is a common assumption about typos.
+  """
+
+  str_lst = list(cur_str)
+
+  # choose how many typo operations to carry out, usually between 1 and 2
+  dt_chars_numb = np.random.randint(1,3)
+
+  for ii in xrange(dt_chars_numb):
+
+    if len(str_lst):
+      # get random character index
+      char_idx = np.random.choice(len(str_lst))
+
+      if len(str_lst) > 1:
+        # choose typo operation randomly
+        typo_op = np.random.choice(4)
+
+      else:
+        # choose typo operation randomly
+        typo_op = np.random.choice(3)
+
+    else:
+      char_idx = 0
+      typo_op = 1 # only insertion is used as typo_op if str is ""
+
+    if typo_op == 0: # and len(str_lst)
+      # delete char
+      del str_lst[char_idx]
+
+    elif typo_op == 1:
+      # insert char
+      str_lst.insert(char_idx, np.random.choice(chars))
+
+    elif typo_op == 2: # and len(str_lst)
+      # replace char
+      str_lst[char_idx] = np.random.choice(chars)
+
+    elif typo_op == 3: # and len(str_lst)>1
+      # permutation of chars
+      tmp_char = str_lst[char_idx]
+      str_lst[char_idx] = str_lst[(char_idx+1) % len(str_lst)]
+      str_lst[(char_idx+1) % len(str_lst)] = tmp_char
+
+  return ''.join(str_lst)
 
 
 class NoiseModel(object):
