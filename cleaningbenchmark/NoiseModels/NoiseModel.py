@@ -94,6 +94,10 @@ def generate_typo(cur_str):
       str_lst[char_idx] = str_lst[(char_idx+1) % len(str_lst)]
       str_lst[(char_idx+1) % len(str_lst)] = tmp_char
 
+  # if nothing in the cell, then change to missing as "?"
+  if len(str_lst) == 0:
+    str_lst = ["?"]
+
   return ''.join(str_lst)
 
 
