@@ -8,6 +8,12 @@ import NoiseModel
 import pandas
 
 
+def bound_number(value, low, high):
+  return max(low, min(high, value))
+
+vbound = numpy.vectorize(bound_number)
+
+
 """
 This model implements Gaussian Noise
 """
@@ -49,7 +55,7 @@ class GaussianNoiseModel(NoiseModel.NoiseModel):
       if not self.scale.size:
         scale = 1.0
       Z = numpy.random.randn(Ns,ps)*self.sigma*scale + self.mu
-      return X + Z
+      return vbound(X + Z, numpy.finfo(float).min, numpy.finfo(float).max)
 
     else:
       Y = numpy.copy(X)
@@ -63,10 +69,11 @@ class GaussianNoiseModel(NoiseModel.NoiseModel):
 
         if self.int_cast[a]:
           noiz = int(numpy.ceil(numpy.random.randn()*self.sigma*scale + self.mu))
+          Y[i,a] = bound_number(Y[i,a] + noiz, numpy.iinfo(int).min, numpy.iinfo(int).max)
         else:
           noiz = numpy.random.randn()*self.sigma*scale + self.mu
+          Y[i,a] = bound_number(Y[i,a] + noiz, numpy.finfo(float).min, numpy.finfo(float).max)
 
-        Y[i,a] = Y[i,a] + noiz
       return Y
 
   def corrupt_elem(self, Y, idxs, idx_map_num):
@@ -80,10 +87,11 @@ class GaussianNoiseModel(NoiseModel.NoiseModel):
 
       if self.int_cast[idx_map_num[idx_1]]:
         noiz = int(numpy.ceil(numpy.random.randn()*self.sigma*scale + self.mu))
+        Y[idx_0, idx_1] = bound_number(Y[idx_0, idx_1] + noiz, numpy.iinfo(int).min, numpy.iinfo(int).max)
       else:
         noiz = numpy.random.randn()*self.sigma*scale + self.mu
+        Y[idx_0, idx_1] = bound_number(Y[idx_0, idx_1] + noiz, numpy.finfo(float).min, numpy.finfo(float).max)
 
-      Y[idx_0, idx_1] = Y[idx_0, idx_1] + noiz
 
 
 """
@@ -127,7 +135,7 @@ class LaplaceNoiseModel(NoiseModel.NoiseModel):
       if not self.scale.size:
         scale = 1.0
       Z = numpy.random.laplace(self.mu, self.b, (Ns,ps))*scale
-      return X + Z
+      return vbound(X + Z, numpy.finfo(float).min, numpy.finfo(float).max)
 
     else:
       Y = numpy.copy(X)
@@ -141,10 +149,11 @@ class LaplaceNoiseModel(NoiseModel.NoiseModel):
 
         if self.int_cast[a]:
           noiz = int(numpy.ceil(numpy.random.laplace(self.mu, self.b)*scale))
+          Y[i,a] = bound_number(Y[i,a] + noiz, numpy.iinfo(int).min, numpy.iinfo(int).max)
         else:
           noiz = numpy.random.laplace(self.mu, self.b)*scale
+          Y[i,a] = bound_number(Y[i,a] + noiz, numpy.finfo(float).min, numpy.finfo(float).max)
 
-        Y[i,a] = Y[i,a] + noiz
       return Y
 
   def corrupt_elem(self, Y, idxs, idx_map_num):
@@ -158,10 +167,10 @@ class LaplaceNoiseModel(NoiseModel.NoiseModel):
 
       if self.int_cast[idx_map_num[idx_1]]:
         noiz = int(numpy.ceil(numpy.random.laplace(self.mu, self.b)*scale))
+        Y[idx_0, idx_1] = bound_number(Y[idx_0, idx_1] + noiz, numpy.iinfo(int).min, numpy.iinfo(int).max)
       else:
         noiz = numpy.random.laplace(self.mu, self.b)*scale
-
-      Y[idx_0, idx_1] = Y[idx_0, idx_1] + noiz
+        Y[idx_0, idx_1] = bound_number(Y[idx_0, idx_1] + noiz, numpy.finfo(float).min, numpy.finfo(float).max)
 
 
 """
@@ -209,7 +218,7 @@ class ZipfNoiseModel(NoiseModel.NoiseModel):
       if not self.scale.size:
         scale = 1.0
       Z = numpy.random.zipf(self.z, (Ns,ps))*scale
-      return X + Z
+      return vbound(X + Z, numpy.finfo(float).min, numpy.finfo(float).max)
 
     else:
       Y = numpy.copy(X)
@@ -228,10 +237,11 @@ class ZipfNoiseModel(NoiseModel.NoiseModel):
 
         if self.int_cast[a]:
           noiz = int(numpy.ceil(numpy.random.zipf(self.z)*scale))
+          Y[i,a] = bound_number(Y[i,a] + noiz*sign_val, numpy.iinfo(int).min, numpy.iinfo(int).max)
         else:
           noiz = numpy.random.zipf(self.z)*scale
-          
-        Y[i,a] = Y[i,a] + noiz*sign_val
+          Y[i,a] = bound_number(Y[i,a] + noiz*sign_val, numpy.finfo(float).min, numpy.finfo(float).max)
+
       return Y
 
   def corrupt_elem(self, Y, idxs, idx_map_num):
@@ -250,11 +260,12 @@ class ZipfNoiseModel(NoiseModel.NoiseModel):
 
       if self.int_cast[idx_map_num[idx_1]]:
         noiz = int(numpy.ceil(numpy.random.zipf(self.z)*scale))
+        Y[idx_0, idx_1] = bound_number(Y[idx_0, idx_1] + noiz*sign_val, numpy.iinfo(int).min, numpy.iinfo(int).max)
+
       else:
         noiz = numpy.random.zipf(self.z)*scale
-
-      Y[idx_0, idx_1] = Y[idx_0, idx_1] + noiz*sign_val
-
+        Y[idx_0, idx_1] = bound_number(Y[idx_0, idx_1] + noiz*sign_val, numpy.finfo(float).min, numpy.finfo(float).max)
+        
 
 """
 Simulates Random Errors for Categorical Features
